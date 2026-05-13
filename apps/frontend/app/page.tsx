@@ -1,4 +1,4 @@
-export default function LogisticsAgentTopPage() {
+﻿export default function LogisticsAgentTopPage() {
   const services = [
     {
       title: "WMS Integration",
@@ -21,6 +21,7 @@ export default function LogisticsAgentTopPage() {
         "配送遅延率・在庫回転率などのKPIをリアルタイム分析します。",
     },
   ];
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
@@ -217,10 +218,10 @@ export default function LogisticsAgentTopPage() {
               </div>
             </div>
 
-            {/* Chat Result Area */}
+            {/* TODO- Chat Result Area */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
               <div className="space-y-6">
-                {/* Assistant Message */}
+                {/* TODO- Assistant Message */}
                 <div className="rounded-3xl bg-white p-6 shadow-sm">
                   <div className="mb-4 text-sm font-semibold text-sky-600">
                     Logistics Agent
@@ -239,7 +240,7 @@ export default function LogisticsAgentTopPage() {
                       <li>遅延時間: 120分</li>
                     </ul>
 
-                    <h4>## 推奨アクション</h4>
+                    <h4 className="bold">## 推奨アクション</h4>
 
                     <ol>
                       <li>代替ルートを利用</li>
@@ -280,7 +281,7 @@ export default function LogisticsAgentTopPage() {
                   </div>
 
                   <button className="rounded-2xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white shadow transition hover:bg-sky-700">
-                    Send
+                    送信
                   </button>
                 </div>
               </div>
