@@ -1,0 +1,55 @@
+openapi: 3.1.0
+info:
+  title: Inquiry Agent API
+  version: 0.1.0
+paths:
+  /agent:
+    post:
+      summary: Send a request to a specialized agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentRequest"
+      responses:
+        "200":
+          description: Agent execution result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentResponse"
+components:
+  schemas:
+    AgentRequest:
+      type: object
+      required:
+        - userId
+        - channel
+        - prompt
+      properties:
+        userId:
+          type: string
+        channel:
+          type: string
+          enum:
+            - reception
+            - hr
+            - it
+            - logistics
+            - accounting
+        prompt:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+    AgentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

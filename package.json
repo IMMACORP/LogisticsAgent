@@ -1,0 +1,22 @@
+{
+  "name": "inquiry-agent-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace apps/frontend dev",
+    "dev:backend": "npm --workspace apps/backend dev",
+    "build:frontend": "npm --workspace apps/frontend build",
+    "build:backend": "npm --workspace apps/backend build",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.6.0"
+  }
+}
