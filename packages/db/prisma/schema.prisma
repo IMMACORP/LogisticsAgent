@@ -1,0 +1,140 @@
+// Inquiry Agent — PostgreSQL (16+)
+//
+// pgvector: enable once per database (outside Prisma, or via migration SQL):
+//   CREATE EXTENSION IF NOT EXISTS vector;
+// Message.embedding uses Unsupported("vector(1536)") as a typed placeholder until
+// you adopt Prisma-native vector support or a custom migration for ivfflat/hnsw.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Chat: session (conversations) + rows (messages)
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.VarChar(255)
+  status       String   @map("status") @db.VarChar(32)
+  currentAgent String?  @map("current_agent") @db.VarChar(64)
+  summary      String?  @map("summary") @db.Text
+  metadata     Json?    @map("metadata") @db.JsonB
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  messages         Message[]
+  escalationLogs   EscalationLog[]
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_conversations_user_id_created_at")
+  @@index([status, updatedAt(sort: Desc)], map: "idx_conversations_status_updated_at")
+  @@map("conversations")
+}
+
+model Message {
+  id             String @id @default(uuid()) @db.Uuid
+  conversationId String @map("conversation_id") @db.Uuid
+  userId         String? @map("user_id") @db.VarChar(255)
+  role           String  @map("role") @db.VarChar(32)
+  agentType      String? @map("agent_type") @db.VarChar(64)
+  content        String  @map("content") @db.Text
+  intent         String? @map("intent") @db.VarChar(128)
+  metadata       Json?   @map("metadata") @db.JsonB
+  embedding      Unsupported("vector(1536)")? @map("embedding")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt(sort: Asc)], map: "idx_messages_conversation_id_created_at")
+  @@index([createdAt(sort: Desc)], map: "idx_messages_created_at")
+  @@index([userId], map: "idx_messages_user_id")
+  @@index([agentType], map: "idx_messages_agent_type")
+  @@map("messages")
+}
+
+model Shipment {
+  id              String    @id @default(uuid()) @db.Uuid
+  trackingNumber  String    @unique @map("tracking_number") @db.VarChar(128)
+  shipmentStatus  String    @map("shipment_status") @db.VarChar(32)
+  origin          String?   @map("origin") @db.VarChar(255)
+  destination     String?   @map("destination") @db.VarChar(255)
+  currentLocation String?   @map("current_location") @db.VarChar(255)
+  eta             DateTime? @map("eta") @db.Timestamptz(6)
+  delayReason     String?   @map("delay_reason") @db.Text
+  customerName    String?   @map("customer_name") @db.VarChar(255)
+  metadata        Json?     @map("metadata") @db.JsonB
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([shipmentStatus, updatedAt(sort: Desc)], map: "idx_shipments_status_updated_at")
+  @@index([customerName], map: "idx_shipments_customer_name")
+  @@index([eta], map: "idx_shipments_eta")
+  @@map("shipments")
+}
+
+model Inventory {
+  id               String   @id @default(uuid()) @db.Uuid
+  warehouseCode    String   @map("warehouse_code") @db.VarChar(64)
+  itemCode         String   @map("item_code") @db.VarChar(128)
+  itemName         String?  @map("item_name") @db.VarChar(512)
+  quantity         Int      @map("quantity")
+  reservedQuantity Int      @default(0) @map("reserved_quantity")
+  unit             String?  @map("unit") @db.VarChar(32)
+  metadata         Json?    @map("metadata") @db.JsonB
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([warehouseCode, itemCode], map: "uq_inventory_warehouse_item")
+  @@index([warehouseCode, updatedAt(sort: Desc)], map: "idx_inventory_warehouse_updated_at")
+  @@index([itemCode], map: "idx_inventory_item_code")
+  @@map("inventory")
+}
+
+model EscalationLog {
+  id               String    @id @default(uuid()) @db.Uuid
+  conversationId   String?   @map("conversation_id") @db.Uuid
+  category         String    @map("category") @db.VarChar(128)
+  priority         String    @map("priority") @db.VarChar(16)
+  escalationReason String?   @map("escalation_reason") @db.Text
+  assignedTeam     String?   @map("assigned_team") @db.VarChar(128)
+  slackThreadTs    String?   @map("slack_thread_ts") @db.VarChar(64)
+  status           String    @map("status") @db.VarChar(32)
+  resolvedAt       DateTime? @map("resolved_at") @db.Timestamptz(6)
+  metadata         Json?     @map("metadata") @db.JsonB
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt(sort: Desc)], map: "idx_escalation_logs_conversation_created_at")
+  @@index([status, priority], map: "idx_escalation_logs_status_priority")
+  @@index([slackThreadTs], map: "idx_escalation_logs_slack_thread_ts")
+  @@map("escalation_logs")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.VarChar(255)
+  actorType  String?  @map("actor_type") @db.VarChar(32)
+  action     String   @map("action") @db.VarChar(128)
+  entityType String   @map("entity_type") @db.VarChar(64)
+  entityId   String   @map("entity_id") @db.VarChar(255)
+  oldValues  Json?    @map("old_values") @db.JsonB
+  newValues  Json?    @map("new_values") @db.JsonB
+  metadata   Json?    @map("metadata") @db.JsonB
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([entityType, entityId, createdAt(sort: Desc)], map: "idx_audit_logs_entity_created_at")
+  @@index([actorId, createdAt(sort: Desc)], map: "idx_audit_logs_actor_created_at")
+  @@index([action], map: "idx_audit_logs_action")
+  @@map("audit_logs")
+}

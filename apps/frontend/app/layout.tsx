@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SIS Logistics Agent",
-  description: "Training project for the SIS Logistics Agent",
+  title: "物流システム | セイノー情報サービス",
+  description:
+    "物流システムとアウトソーシングのセイノー情報サービス — ロジスティクス・エージェント",
 };
 
 export default function RootLayout({
@@ -24,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

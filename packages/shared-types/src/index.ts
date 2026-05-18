@@ -16,3 +16,20 @@ export interface SlackNotificationPayload {
   text: string;
   blocks?: unknown[];
 }
+
+export type {
+  DeliveryIssueRecord,
+  DeliveryIssueStatus,
+  GetShipmentStatusInput,
+  GetShipmentStatusOutput,
+  SearchDeliveryIssueInput,
+  SearchDeliveryIssueOutput,
+  SearchShipmentHistoryInput,
+  SearchShipmentHistoryOutput,
+  ShipmentHistoryRecord,
+  ShipmentStatus,
+  ToolErrorCode,
+  ToolExecutionContext,
+  ToolExecutionStatus,
+  ToolResult,
+} from './tools/shipment';

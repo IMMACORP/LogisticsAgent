@@ -6,7 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "@inquiry-agent/shared-types": ["packages/shared-types/src"],
-      "@inquiry-agent/shared-types/*": ["packages/shared-types/src/*"]
+      "@inquiry-agent/shared-types/*": ["packages/shared-types/src/*"],
+      "@inquiry-agent/db": ["packages/db/src/index.ts"],
+      "@inquiry-agent/db/*": ["packages/db/src/*"]
     }
   },
   "references": [
