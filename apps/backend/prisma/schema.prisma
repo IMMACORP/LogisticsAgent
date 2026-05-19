@@ -1,4 +1,4 @@
-﻿// Inquiry Agent — PostgreSQL (16+)
+// Inquiry Agent — PostgreSQL (16+)
 //
 // pgvector: enable once per database (outside Prisma, or via migration SQL):
 //   CREATE EXTENSION IF NOT EXISTS vector;

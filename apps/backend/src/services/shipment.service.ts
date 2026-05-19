@@ -8,6 +8,7 @@ import type {
   ShipmentHistoryRecord,
   ShipmentStatus,
 } from '@inquiry-agent/shared-types';
+import type { Prisma } from '@prisma/client';
 
 import type { ShipmentRepository } from '../database/repositories/shipment.repository';
 import { ToolExecutionError } from '../lib/tools/tool-result';
@@ -16,14 +17,7 @@ import { shipmentStatusSchema } from '../schemas/shipment/shipment.schemas';
 const DEFAULT_HISTORY_LIMIT = 20;
 const DEFAULT_ISSUE_LIMIT = 20;
 
-type ShipmentWhereInput = {
-  trackingNumber?:
-    | string
-    | { contains: string; mode: 'insensitive' };
-  customerName?: { contains: string; mode: 'insensitive' };
-  shipmentStatus?: ShipmentStatus | { in: readonly string[] };
-  updatedAt?: { gte?: Date; lte?: Date };
-};
+type ShipmentWhereInput = Prisma.ShipmentWhereInput;
 
 type ShipmentRecord = {
   trackingNumber: string;
@@ -41,7 +35,7 @@ function assertShipmentStatus(status: string): ShipmentStatus {
   const parsed = shipmentStatusSchema.safeParse(status);
   if (!parsed.success) {
     throw new ToolExecutionError(
-      `不明な配送ステータス: ${status}`,
+      `不�?�な配送ス�?ータス: ${status}`,
       'DATABASE_ERROR',
     );
   }
@@ -87,7 +81,7 @@ export class ShipmentService {
     return {
       trackingNumber: shipment.trackingNumber,
       shipmentStatus: assertShipmentStatus(shipment.shipmentStatus),
-      currentLocation: shipment.currentLocation ?? '不明',
+      currentLocation: shipment.currentLocation ?? '不�??',
       origin: shipment.origin ?? undefined,
       destination: shipment.destination ?? undefined,
       customerName: shipment.customerName ?? undefined,
@@ -161,12 +155,12 @@ export class ShipmentService {
   ): Promise<SearchDeliveryIssueOutput> {
     const limit = input.limit ?? DEFAULT_ISSUE_LIMIT;
     const updatedAt = buildUpdatedAtRange(input.fromDate, input.toDate);
-    const issueStatuses = input.issueStatus
+    const issueStatuses: string[] = input.issueStatus
       ? [input.issueStatus]
-      : (['DELAYED', 'CANCELLED'] as const);
+      : ['DELAYED', 'CANCELLED'];
 
     const where: ShipmentWhereInput = {
-      shipmentStatus: { in: [...issueStatuses] },
+      shipmentStatus: { in: issueStatuses },
       ...(input.trackingNumber
         ? {
             trackingNumber: {
@@ -194,7 +188,7 @@ export class ShipmentService {
 
     if (records.length === 0) {
       throw new ToolExecutionError(
-        '条件に一致する配送トラブル（遅延・キャンセル）が見つかりません',
+        '条件に一致する配送トラブル?��遅延・キャンセル?��が見つかりません',
         'NO_RESULTS',
         { filters: input },
       );

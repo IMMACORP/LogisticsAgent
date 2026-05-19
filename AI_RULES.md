@@ -4,8 +4,11 @@
 - Next.js App Router
 - TypeScript strict mode
 - Hono backend
+- API Client Generator	Orval
 - Prisma ORM
 - PostgreSQL
+- SDK: OpenAI Agents SDK
+- LLM: GPT-4.1-mini
 
 ## Architecture
 - Thin route handlers
