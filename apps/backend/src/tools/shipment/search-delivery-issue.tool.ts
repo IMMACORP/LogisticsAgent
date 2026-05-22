@@ -6,6 +6,7 @@ import type {
 } from '@inquiry-agent/shared-types';
 
 import { runTool } from '../../lib/tools/tool-result';
+import { stripNullFields } from '../../schemas/agent-zod.js';
 import { searchDeliveryIssueInputSchema } from '../../schemas/shipment/shipment.schemas';
 import { shipmentService } from '../../services';
 
@@ -22,5 +23,7 @@ export async function searchDeliveryIssue(
     };
   }
 
-  return runTool(() => shipmentService.searchDeliveryIssues(parsed.data));
+  return runTool(() =>
+    shipmentService.searchDeliveryIssues(stripNullFields(parsed.data)),
+  );
 }

@@ -1,8 +1,13 @@
-import { handleReception } from './reception.js';
+import { handleAccounting } from './accounting.js';
 import { handleHr } from './hr.js';
 import { handleIt } from './it.js';
-import { handleAccounting } from './accounting.js';
+import { handleReception } from './reception.js';
+import { runAgentWithOpenAISdk } from './run-agent-with-openai-sdk.js';
+import { isOpenAIAgentsSdkEnabled } from './runtime/sdk-config.js';
 export async function runAgent(request) {
+    if (isOpenAIAgentsSdkEnabled()) {
+        return runAgentWithOpenAISdk(request);
+    }
     switch (request.channel) {
         case 'reception':
             return handleReception(request);

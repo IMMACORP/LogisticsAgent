@@ -1,27 +1,9 @@
-export type ToolExecutionStatus = 'success' | 'failed';
-
-export interface ToolResult<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  errorCode?: ToolErrorCode;
-  executionTimeMs?: number;
-  metadata?: Record<string, unknown>;
-}
-
-export interface ToolExecutionContext {
-  sessionId: string;
-  userId?: string;
-  agentName?: string;
-  traceId?: string;
-}
-
-export type ToolErrorCode =
-  | 'NOT_FOUND'
-  | 'VALIDATION_ERROR'
-  | 'INVALID_INPUT'
-  | 'DATABASE_ERROR'
-  | 'NO_RESULTS';
+export type {
+  ToolErrorCode,
+  ToolExecutionContext,
+  ToolExecutionStatus,
+  ToolResult,
+} from './common';
 
 export type ShipmentStatus =
   | 'PENDING'

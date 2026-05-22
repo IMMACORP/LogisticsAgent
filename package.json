@@ -9,6 +9,9 @@
   "scripts": {
     "dev:frontend": "npm --workspace apps/frontend dev",
     "dev:backend": "npm --workspace apps/backend dev",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:setup": "npm run db:up && npm run db:push --workspace apps/backend && npm run db:seed --workspace apps/backend",
     "build:frontend": "npm --workspace apps/frontend build",
     "build:backend": "npm --workspace apps/backend build",
     "typecheck": "npm run typecheck --workspaces",

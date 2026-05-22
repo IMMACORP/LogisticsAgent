@@ -2,54 +2,391 @@ openapi: 3.1.0
 info:
   title: Inquiry Agent API
   version: 0.1.0
+  description: REST APIs for conversation, message, and escalation history. Orval-compatible with paginated list responses.
+servers:
+  - url: http://localhost:3001
+    description: Local development
+tags:
+  - name: Conversation History
+  - name: Message History
+  - name: Escalation History
 paths:
-  /agent:
-    post:
-      summary: Send a request to a specialized agent
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AgentRequest"
+  /api/conversations:
+    get:
+      tags:
+        - Conversation History
+      summary: List conversations for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, closed]
+        - name: currentAgent
+          in: query
+          schema:
+            type: string
       responses:
-        "200":
-          description: Agent execution result
+        '200':
+          description: Paginated conversation history
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AgentResponse"
+                $ref: '#/components/schemas/PaginatedConversationHistory'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/conversations/{conversationId}:
+    get:
+      tags:
+        - Conversation History
+      summary: Get a single conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationHistoryItem'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/conversations/{conversationId}/messages:
+    get:
+      tags:
+        - Message History
+      summary: List messages in a conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMessageHistory'
+  /api/messages:
+    get:
+      tags:
+        - Message History
+      summary: List messages (filterable)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: conversationId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [user, assistant, agent, system]
+      responses:
+        '200':
+          description: Paginated message history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMessageHistory'
+  /api/escalations:
+    get:
+      tags:
+        - Escalation History
+      summary: List escalation logs
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: conversationId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, acknowledged, resolved]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [LOW, MEDIUM, HIGH]
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated escalation history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEscalationHistory'
+  /api/escalations/{escalationId}:
+    get:
+      tags:
+        - Escalation History
+      summary: Get a single escalation log
+      parameters:
+        - name: escalationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Escalation log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalationHistoryItem'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
 components:
   schemas:
-    AgentRequest:
+    PaginationMeta:
       type: object
-      required:
-        - userId
-        - channel
-        - prompt
+      required: [page, pageSize, total, totalPages]
       properties:
-        userId:
-          type: string
-        channel:
-          type: string
-          enum:
-            - reception
-            - hr
-            - it
-            - logistics
-            - accounting
-        prompt:
-          type: string
-        metadata:
-          type: object
-          additionalProperties: true
-    AgentResponse:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+    ApiError:
       type: object
+      required: [success, error]
       properties:
         success:
           type: boolean
-        message:
-          type: string
-        details:
+          enum: [false]
+        error:
           type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+    ConversationHistoryItem:
+      type: object
+      required: [id, userId, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        status:
+          type: string
+        currentAgent:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
           additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaginatedConversationHistory:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationHistoryItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+    MessageHistoryItem:
+      type: object
+      required: [id, conversationId, role, content, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          nullable: true
+        role:
+          type: string
+        agentType:
+          type: string
+          nullable: true
+        content:
+          type: string
+        intent:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaginatedMessageHistory:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageHistoryItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+    EscalationHistoryItem:
+      type: object
+      required: [id, category, priority, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+          nullable: true
+        category:
+          type: string
+        priority:
+          type: string
+        escalationReason:
+          type: string
+          nullable: true
+        assignedTeam:
+          type: string
+          nullable: true
+        slackThreadTs:
+          type: string
+          nullable: true
+        status:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaginatedEscalationHistory:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EscalationHistoryItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'

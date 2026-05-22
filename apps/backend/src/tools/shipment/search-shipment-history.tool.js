@@ -6,7 +6,7 @@ export async function searchShipmentHistory(input, _context) {
     if (!parsed.success) {
         return {
             success: false,
-            error: parsed.error.issues[0]?.message ?? '入力値が不正です',
+            error: parsed.error.issues[0]?.message ?? '入力値が不正で�?',
             errorCode: 'VALIDATION_ERROR',
         };
     }

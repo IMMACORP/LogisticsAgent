@@ -8,7 +8,6 @@ import type {
   ShipmentHistoryRecord,
   ShipmentStatus,
 } from '@inquiry-agent/shared-types';
-import type { Prisma } from '@prisma/client';
 
 import type { ShipmentRepository } from '../database/repositories/shipment.repository';
 import { ToolExecutionError } from '../lib/tools/tool-result';
@@ -17,7 +16,12 @@ import { shipmentStatusSchema } from '../schemas/shipment/shipment.schemas';
 const DEFAULT_HISTORY_LIMIT = 20;
 const DEFAULT_ISSUE_LIMIT = 20;
 
-type ShipmentWhereInput = Prisma.ShipmentWhereInput;
+type ShipmentWhereInput = {
+  trackingNumber?: string | { contains: string; mode: 'insensitive' };
+  customerName?: { contains: string; mode: 'insensitive' };
+  shipmentStatus?: string | { in: string[] };
+  updatedAt?: { gte?: Date; lte?: Date };
+};
 
 type ShipmentRecord = {
   trackingNumber: string;

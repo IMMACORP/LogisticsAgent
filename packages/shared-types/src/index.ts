@@ -1,6 +1,10 @@
+import type { AgentChannel } from './agent-run-context';
+
+export type { AgentChannel, AgentRunContext } from './agent-run-context';
+
 export interface AgentRequest {
   userId: string;
-  channel: 'hr' | 'it' | 'logistics' | 'accounting' | 'reception';
+  channel: AgentChannel;
   prompt: string;
   metadata?: Record<string, unknown>;
 }
@@ -18,18 +22,38 @@ export interface SlackNotificationPayload {
 }
 
 export type {
+  CheckStockAvailabilityInput,
+  CheckStockAvailabilityOutput,
   DeliveryIssueRecord,
   DeliveryIssueStatus,
+  EscalationSeverity,
   GetShipmentStatusInput,
   GetShipmentStatusOutput,
+  InventoryRecord,
+  KnowledgeCategory,
+  KnowledgeChunkHit,
+  KnowledgeCitation,
+  KnowledgeRetrievalMode,
+  NotifySlackInput,
+  NotifySlackOutput,
+  NotifySlackPriority,
+  ReserveInventoryInput,
+  ReserveInventoryOutput,
   SearchDeliveryIssueInput,
   SearchDeliveryIssueOutput,
+  SearchInventoryInput,
+  SearchInventoryOutput,
+  SearchKnowledgeBaseInput,
+  SearchKnowledgeBaseOutput,
   SearchShipmentHistoryInput,
   SearchShipmentHistoryOutput,
   ShipmentHistoryRecord,
   ShipmentStatus,
+  StructuredEscalationPayload,
   ToolErrorCode,
   ToolExecutionContext,
   ToolExecutionStatus,
   ToolResult,
-} from './tools/shipment';
+} from './tools';
+
+export { priorityToSeverity } from './tools';

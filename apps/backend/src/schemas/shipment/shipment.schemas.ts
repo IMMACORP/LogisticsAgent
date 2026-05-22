@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { agentNullable, stripNullFields } from '../agent-zod.js';
+
 export const shipmentStatusSchema = z.enum([
   'PENDING',
   'IN_TRANSIT',
@@ -28,47 +30,59 @@ export const getShipmentStatusInputSchema = z.object({
   trackingNumber: trackingNumberSchema,
 });
 
-export const searchShipmentHistoryInputSchema = z
+const searchShipmentHistoryObjectSchema = z
   .object({
-    trackingNumber: trackingNumberSchema.optional(),
-    customerName: z.string().trim().min(1).max(255).optional(),
-    shipmentStatus: shipmentStatusSchema.optional(),
-    fromDate: isoDateSchema.optional(),
-    toDate: isoDateSchema.optional(),
-    limit: z.number().int().min(1).max(50).optional(),
+    trackingNumber: agentNullable(trackingNumberSchema),
+    customerName: agentNullable(z.string().trim().min(1).max(255)),
+    shipmentStatus: agentNullable(shipmentStatusSchema),
+    fromDate: agentNullable(isoDateSchema),
+    toDate: agentNullable(isoDateSchema),
+    limit: agentNullable(z.number().int().min(1).max(50)),
   })
   .refine(
     (value) =>
-      value.trackingNumber ||
-      value.customerName ||
-      value.shipmentStatus ||
-      value.fromDate ||
+      value.trackingNumber ??
+      value.customerName ??
+      value.shipmentStatus ??
+      value.fromDate ??
       value.toDate,
     {
       message: 'trackingNumber, customerName, shipmentStatus, fromDate, toDate のいずれか1つ以上を指定してください',
     },
   );
 
-export const searchDeliveryIssueInputSchema = z
+export const searchShipmentHistoryToolParametersSchema =
+  searchShipmentHistoryObjectSchema;
+
+export const searchShipmentHistoryInputSchema =
+  searchShipmentHistoryToolParametersSchema;
+
+const searchDeliveryIssueObjectSchema = z
   .object({
-    trackingNumber: trackingNumberSchema.optional(),
-    customerName: z.string().trim().min(1).max(255).optional(),
-    issueStatus: deliveryIssueStatusSchema.optional(),
-    fromDate: isoDateSchema.optional(),
-    toDate: isoDateSchema.optional(),
-    limit: z.number().int().min(1).max(50).optional(),
+    trackingNumber: agentNullable(trackingNumberSchema),
+    customerName: agentNullable(z.string().trim().min(1).max(255)),
+    issueStatus: agentNullable(deliveryIssueStatusSchema),
+    fromDate: agentNullable(isoDateSchema),
+    toDate: agentNullable(isoDateSchema),
+    limit: agentNullable(z.number().int().min(1).max(50)),
   })
   .refine(
     (value) =>
-      value.trackingNumber ||
-      value.customerName ||
-      value.issueStatus ||
-      value.fromDate ||
+      value.trackingNumber ??
+      value.customerName ??
+      value.issueStatus ??
+      value.fromDate ??
       value.toDate,
     {
       message: 'trackingNumber, customerName, issueStatus, fromDate, toDate のいずれか1つ以上を指定してください',
     },
   );
+
+export const searchDeliveryIssueToolParametersSchema =
+  searchDeliveryIssueObjectSchema;
+
+export const searchDeliveryIssueInputSchema =
+  searchDeliveryIssueToolParametersSchema;
 
 export type GetShipmentStatusInputSchema = z.infer<
   typeof getShipmentStatusInputSchema

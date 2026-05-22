@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 
+import { ChatErrorBoundary } from "@/components/inquiry/chat-error-boundary";
 import { ChatPanel } from "@/components/inquiry/chat-panel";
 import { ServicesTable } from "@/components/inquiry/services-table";
 import { SiteFooter } from "@/components/inquiry/site-footer";
 import { SiteHeader } from "@/components/inquiry/site-header";
 import { Button } from "@/components/ui/button";
 import type { LogisticsService } from "@/lib/data/services";
-import type { ChatMessage } from "@/lib/types/chat";
 import { cn } from "@/lib/utils";
 
 interface InquiryTopPageProps {
@@ -17,7 +17,7 @@ interface InquiryTopPageProps {
 
 export function InquiryTopPage({ services }: InquiryTopPageProps) {
   const [chatOpen, setChatOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatResetKey, setChatResetKey] = useState(0);
 
   const openChat = () => setChatOpen(true);
 
@@ -104,11 +104,12 @@ export function InquiryTopPage({ services }: InquiryTopPageProps) {
         </main>
 
         {chatOpen ? (
-          <ChatPanel
-            messages={messages}
-            onMessagesChange={setMessages}
-            className="sticky top-[72px] h-[calc(100vh-72px)]"
-          />
+          <ChatErrorBoundary
+            key={chatResetKey}
+            onReset={() => setChatResetKey((k) => k + 1)}
+          >
+            <ChatPanel className="sticky top-[72px] h-[calc(100vh-72px)]" />
+          </ChatErrorBoundary>
         ) : null}
       </div>
     </div>

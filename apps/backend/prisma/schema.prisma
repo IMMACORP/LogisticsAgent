@@ -157,3 +157,26 @@ model AuditLog {
   @@index([action], map: "idx_audit_logs_action")
   @@map("audit_logs")
 }
+
+// ---------------------------------------------------------------------------
+// Workflow orchestration (durable run state)
+// ---------------------------------------------------------------------------
+
+model WorkflowRun {
+  id              String   @id @default(uuid()) @db.Uuid
+  workflowKey     String   @map("workflow_key") @db.VarChar(128)
+  version         String   @default("1") @map("version") @db.VarChar(32)
+  /// pending | running | completed | failed | compensating | compensated
+  status          String   @map("status") @db.VarChar(32)
+  currentStepId   String?  @map("current_step_id") @db.VarChar(128)
+  state           Json     @default("{}") @map("state") @db.JsonB
+  stepHistory     Json     @default("[]") @map("step_history") @db.JsonB
+  traceId         String?  @map("trace_id") @db.VarChar(128)
+  lastError       Json?    @map("last_error") @db.JsonB
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([workflowKey, createdAt(sort: Desc)], map: "idx_workflow_runs_key_created_at")
+  @@index([status, updatedAt(sort: Desc)], map: "idx_workflow_runs_status_updated_at")
+  @@map("workflow_runs")
+}
