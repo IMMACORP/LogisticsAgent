@@ -1,4 +1,5 @@
 import { run } from '@openai/agents';
+import { configureOpenAIAgentsSdk } from './sdk-config.js';
 import { structuredLog } from './structured-log.js';
 /**
  * Default runtime: delegates to OpenAI Agents SDK `run()` with structured logging
@@ -7,6 +8,7 @@ import { structuredLog } from './structured-log.js';
 export class OpenAIAgentsRuntime {
     async run(input) {
         const { agent, context } = input;
+        configureOpenAIAgentsSdk();
         structuredLog('info', 'agent.run.start', {
             traceId: context.traceId,
             channel: context.channel,

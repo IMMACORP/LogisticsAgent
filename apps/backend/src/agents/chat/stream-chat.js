@@ -1,8 +1,9 @@
 import { conversationService } from '../../services/conversation.service.js';
-import { assertOpenAIKeyPresent, isOpenAIAgentsSdkEnabled } from '../runtime/sdk-config.js';
+import { assertOpenAIKeyPresent, configureOpenAIAgentsSdk, isOpenAIAgentsSdkEnabled, } from '../runtime/sdk-config.js';
 import { createAgentRunContext } from '../runtime/create-agent-run-context.js';
 import { streamAgentRun } from '../runtime/openai-agents-stream.js';
 import { structuredLog } from '../runtime/structured-log.js';
+import { toUserFacingOpenAIError } from '../../lib/openai/user-facing-errors.js';
 import { getOrCreateChatMemorySession } from './chat-session-store.js';
 import { resolveStreamingAgent } from './resolve-streaming-agent.js';
 export class ChatStreamError extends Error {
@@ -25,6 +26,7 @@ export async function runChatStream(options) {
         throw new ChatStreamError('SDK_DISABLED', 'Set INQUIRY_USE_AGENTS_SDK=true to use chat streaming', options.request.traceId ?? 'unknown', false);
     }
     assertOpenAIKeyPresent();
+    configureOpenAIAgentsSdk();
     const agent = resolveStreamingAgent(options.request.channel);
     const context = createAgentRunContext({
         userId: options.request.userId,
@@ -78,6 +80,11 @@ export async function runChatStream(options) {
             traceId: context.traceId,
             metadata: {
                 streamed: true,
+                ...(result.finalOutput != null &&
+                    typeof result.finalOutput === 'object' &&
+                    !Array.isArray(result.finalOutput)
+                    ? { structuredOutput: result.finalOutput }
+                    : {}),
             },
         });
         await options.send('done', {
@@ -93,22 +100,24 @@ export async function runChatStream(options) {
         });
     }
     catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+        const raw = err instanceof Error ? err.message : String(err);
+        const facing = toUserFacingOpenAIError(raw);
         structuredLog('error', 'chat.stream.failed', {
             traceId: context.traceId,
             conversationId,
             channel: context.channel,
-            error: message,
+            error: facing.message,
+            errorCode: facing.code,
         });
         await conversationService.appendMessage({
             conversationId,
             role: 'system',
-            content: `[stream error] ${message}`,
+            content: `[stream error] ${facing.message}`,
             traceId: context.traceId,
-            metadata: { error: true },
+            metadata: { error: true, errorCode: facing.code },
         });
         throw err instanceof ChatStreamError
             ? err
-            : new ChatStreamError('AGENT_STREAM_FAILED', message, context.traceId, true);
+            : new ChatStreamError(facing.code, facing.message, context.traceId, facing.recoverable);
     }
 }

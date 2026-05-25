@@ -10,13 +10,13 @@ import type { AgentToolRegistry } from './agent-tool-registry.js';
 export function registerDefaultAgentToolModules(registry: AgentToolRegistry): void {
   registry.registerAgentToolModule({
     id: 'knowledge-base',
-    channels: ['reception', 'hr', 'it', 'accounting'],
+    channels: ['reception', 'hr', 'it'],
     tools: knowledgeAgentTools,
   });
 
   registry.registerAgentToolModule({
     id: 'slack-escalation',
-    channels: ['reception', 'hr', 'it', 'accounting'],
+    channels: ['reception', 'hr', 'it'],
     tools: slackAgentTools,
   });
 

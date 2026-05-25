@@ -1,5 +1,4 @@
 import { AgentRequest, AgentResponse } from '@inquiry-agent/shared-types';
-import { handleAccounting } from './accounting.js';
 import { handleHr } from './hr.js';
 import { handleIt } from './it.js';
 import { handleReception } from './reception.js';
@@ -18,8 +17,6 @@ export async function runAgent(request: AgentRequest): Promise<AgentResponse> {
       return handleHr(request);
     case 'it':
       return handleIt(request);
-    case 'accounting':
-      return handleAccounting(request);
     case 'logistics':
       return handleReception(request);
     default:

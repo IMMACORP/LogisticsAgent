@@ -10,6 +10,7 @@ import {
 import { createAgentRunContext } from '../runtime/create-agent-run-context.js';
 import { streamAgentRun } from '../runtime/openai-agents-stream.js';
 import { structuredLog } from '../runtime/structured-log.js';
+import { toUserFacingOpenAIError } from '../../lib/openai/user-facing-errors.js';
 import { getOrCreateChatMemorySession } from './chat-session-store.js';
 import { resolveStreamingAgent } from './resolve-streaming-agent.js';
 
@@ -112,6 +113,11 @@ export async function runChatStream(options: RunChatStreamOptions): Promise<void
       traceId: context.traceId,
       metadata: {
         streamed: true,
+        ...(result.finalOutput != null &&
+        typeof result.finalOutput === 'object' &&
+        !Array.isArray(result.finalOutput)
+          ? { structuredOutput: result.finalOutput }
+          : {}),
       },
     });
 
@@ -128,35 +134,30 @@ export async function runChatStream(options: RunChatStreamOptions): Promise<void
     });
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err);
-    const isInvalidApiKey =
-      raw.includes('401') ||
-      raw.includes('Incorrect API key') ||
-      raw.includes('invalid_api_key');
-    const message = isInvalidApiKey
-      ? 'OpenAI auth failed (401). For sk-proj-* keys add OPENAI_PROJECT_ID=proj_... to apps/backend/.env (same as your other project), then restart. Verify with: npm run check:openai'
-      : raw;
+    const facing = toUserFacingOpenAIError(raw);
     structuredLog('error', 'chat.stream.failed', {
       traceId: context.traceId,
       conversationId,
       channel: context.channel,
-      error: message,
+      error: facing.message,
+      errorCode: facing.code,
     });
 
     await conversationService.appendMessage({
       conversationId,
       role: 'system',
-      content: `[stream error] ${message}`,
+      content: `[stream error] ${facing.message}`,
       traceId: context.traceId,
-      metadata: { error: true },
+      metadata: { error: true, errorCode: facing.code },
     });
 
     throw err instanceof ChatStreamError
       ? err
       : new ChatStreamError(
-          isInvalidApiKey ? 'OPENAI_AUTH' : 'AGENT_STREAM_FAILED',
-          message,
+          facing.code,
+          facing.message,
           context.traceId,
-          !isInvalidApiKey,
+          facing.recoverable,
         );
   }
 }

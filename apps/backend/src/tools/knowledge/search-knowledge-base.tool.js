@@ -1,5 +1,6 @@
 import { runTool } from '../../lib/tools/tool-result';
 import { searchKnowledgeBaseInputSchema } from '../../schemas/knowledge/knowledge.schemas';
+import { stripNullFields } from '../../schemas/agent-zod.js';
 import { knowledgeService } from '../../services';
 export async function searchKnowledgeBase(input, _context) {
     const parsed = searchKnowledgeBaseInputSchema.safeParse(input);
@@ -10,5 +11,5 @@ export async function searchKnowledgeBase(input, _context) {
             errorCode: 'VALIDATION_ERROR',
         };
     }
-    return runTool(() => knowledgeService.searchKnowledgeBase(parsed.data));
+    return runTool(() => knowledgeService.searchKnowledgeBase(stripNullFields(parsed.data)));
 }

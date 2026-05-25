@@ -23,8 +23,6 @@ function agentNameForChannel(channel) {
             return 'it-agent';
         case 'logistics':
             return 'logistics-agent';
-        case 'accounting':
-            return 'accounting-agent';
         default: {
             const _exhaustive = channel;
             return _exhaustive;
@@ -52,11 +50,6 @@ const agents = {
         name: agentNameForChannel('logistics'),
         instructions: buildDomainInstructions('logistics'),
         tools: registry.resolveTools('logistics'),
-    }),
-    accounting: createDomainAgent({
-        name: agentNameForChannel('accounting'),
-        instructions: buildDomainInstructions('accounting'),
-        tools: registry.resolveTools('accounting'),
     }),
 };
 export function getChannelAgent(channel) {

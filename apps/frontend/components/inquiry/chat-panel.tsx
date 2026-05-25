@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { EscalationStatusPanel } from "@/components/inquiry/escalation-status-panel";
 import { MarkdownMessage } from "@/components/inquiry/markdown-message";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { getApiBaseUrl } from "@/lib/api/get-api-base-url";
 import { useChatStream } from "@/lib/hooks/use-chat-stream";
@@ -33,7 +32,7 @@ export function ChatPanel({ className }: ChatPanelProps) {
     clearChat,
   } = useChatStream();
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const apiConfigured = Boolean(getApiBaseUrl());
 
   const form = useForm<ChatInputValues>({
@@ -45,7 +44,10 @@ export function ChatPanel({ className }: ChatPanelProps) {
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      const el = messagesScrollRef.current;
+      if (el) {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      }
     });
   };
 
@@ -67,11 +69,11 @@ export function ChatPanel({ className }: ChatPanelProps) {
   return (
     <aside
       className={cn(
-        "flex h-full min-h-0 flex-col border-l border-border bg-slate-50",
+        "flex h-full min-h-0 flex-col overflow-hidden border-l border-border bg-slate-50",
         className,
       )}
     >
-      <div className="flex items-center justify-between border-b border-border bg-white px-5 py-4">
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-white px-5 py-4">
         <div>
           <p className="font-semibold text-[#1e3a5f]">ロジスティクス・エージェント</p>
           <p
@@ -105,16 +107,23 @@ export function ChatPanel({ className }: ChatPanelProps) {
       </div>
 
       {!apiConfigured ? (
-        <div className="mx-5 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <div className="mx-5 mt-4 shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           <AlertCircle className="mr-1 inline size-3.5" />
           `NEXT_PUBLIC_API_BASE_URL` を設定してください（例: http://localhost:3001）。
         </div>
       ) : null}
 
-      <EscalationStatusPanel conversationId={conversationId} />
+      <EscalationStatusPanel
+        conversationId={conversationId}
+        className="max-h-[min(32vh,280px)] shrink-0 overflow-y-auto"
+      />
 
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-4 px-5 py-5">
+      <div
+        ref={messagesScrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        aria-label="チャットメッセージ"
+      >
+        <div className="space-y-4 px-5 py-5 pb-8">
           {messages.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-white p-6 text-sm text-muted-foreground">
               物流に関するお問い合わせを入力してください。配送状況の確認、在庫、ルート最適化などをサポートします。
@@ -124,12 +133,11 @@ export function ChatPanel({ className }: ChatPanelProps) {
               <ChatMessageBubble key={message.id} message={message} />
             ))
           )}
-          <div ref={bottomRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       {showRetry ? (
-        <div className="border-t border-border bg-white px-4 py-2">
+        <div className="shrink-0 border-t border-border bg-white px-4 py-2">
           <Button
             type="button"
             variant="outline"
@@ -146,7 +154,7 @@ export function ChatPanel({ className }: ChatPanelProps) {
 
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border bg-white p-4"
+        className="shrink-0 border-t border-border bg-white p-4"
       >
         <div className="rounded-xl border border-border bg-slate-50 p-3">
           <Textarea
@@ -200,7 +208,7 @@ function ChatMessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-white p-4 shadow-sm",
+        "min-w-0 max-w-full rounded-2xl border bg-white p-4 shadow-sm",
         isError ? "border-destructive/40" : "border-border",
       )}
     >
@@ -214,10 +222,31 @@ function ChatMessageBubble({ message }: { message: ChatMessage }) {
         ) : null}
       </div>
       {message.content ? (
-        <MarkdownMessage content={message.content} />
+        <div aria-live="polite" aria-atomic="false" className="space-y-2">
+          {isStreaming ? (
+            <p className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">
+              {message.content}
+              <span
+                className="ml-0.5 inline-block h-[1em] w-0.5 animate-pulse bg-slate-500 align-text-bottom"
+                aria-hidden
+              />
+            </p>
+          ) : (
+            <MarkdownMessage content={message.content} />
+          )}
+        </div>
       ) : isStreaming ? (
-        <p className="text-sm text-muted-foreground animate-pulse">考えています…</p>
+        <TypingIndicator />
       ) : null}
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+      <span className="h-2 w-2 rounded-full bg-slate-500 animate-pulse" />
+      <span>ストリーミング中...</span>
     </div>
   );
 }

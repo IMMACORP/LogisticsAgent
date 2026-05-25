@@ -1,13 +1,14 @@
 import { tool } from '@openai/agents';
-import { checkStockAvailabilityInputSchema, reserveInventoryInputSchema, searchInventoryInputSchema, } from '../../schemas/inventory/inventory.schemas';
+import { stripNullFields } from '../../schemas/agent-zod.js';
+import { checkStockAvailabilityInputSchema, reserveInventoryToolParametersSchema, searchInventoryToolParametersSchema, } from '../../schemas/inventory/inventory.schemas';
 import { checkStockAvailability } from './check-stock-availability.tool';
 import { reserveInventory } from './reserve-inventory.tool';
 import { searchInventory } from './search-inventory.tool';
 export const searchInventoryAgentTool = tool({
     name: 'searchInventory',
     description: '倉庫コード・品目コード・品目名で在庫を検索します。在庫数・引当済数・引当可能数を返します。',
-    parameters: searchInventoryInputSchema,
-    execute: async (input) => searchInventory(input),
+    parameters: searchInventoryToolParametersSchema,
+    execute: async (input) => searchInventory(stripNullFields(input)),
 });
 export const checkStockAvailabilityAgentTool = tool({
     name: 'checkStockAvailability',
@@ -18,8 +19,8 @@ export const checkStockAvailabilityAgentTool = tool({
 export const reserveInventoryAgentTool = tool({
     name: 'reserveInventory',
     description: '指定倉庫・品目の在庫を引当します。トランザクション内で在庫ロック（プレースホルダ）を取得し、引当可能数を検証してから reserved_quantity を更新します。',
-    parameters: reserveInventoryInputSchema,
-    execute: async (input) => reserveInventory(input),
+    parameters: reserveInventoryToolParametersSchema,
+    execute: async (input) => reserveInventory(stripNullFields(input)),
 });
 export const inventoryAgentTools = [
     searchInventoryAgentTool,

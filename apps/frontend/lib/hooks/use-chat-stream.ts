@@ -11,6 +11,8 @@ import {
   saveConversationId,
 } from "@/lib/chat/session-storage";
 import type { ChatMessage } from "@/lib/types/chat";
+import { createTypewriterQueue } from "@/lib/hooks/use-typewriter-queue";
+import type { TypewriterQueue } from "@/lib/hooks/use-typewriter-queue";
 
 const USER_ID = "web-guest";
 
@@ -54,13 +56,41 @@ export function useChatStream(initialMessages: ChatMessage[] = []): UseChatStrea
 
   const abortRef = useRef<AbortController | null>(null);
   const lastUserPromptRef = useRef<string | null>(null);
+  const assistantIdRef = useRef<string | null>(null);
+  const typewriterRef = useRef<TypewriterQueue | null>(null);
+
+  const updateAssistantContent = useCallback((assistantId: string, content: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === assistantId ? { ...m, content, status: "streaming" as const } : m,
+      ),
+    );
+  }, []);
+
+  const markAssistantComplete = useCallback((assistantId: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === assistantId ? { ...m, status: "complete" as const } : m,
+      ),
+    );
+    setIsStreaming(false);
+    assistantIdRef.current = null;
+    typewriterRef.current = null;
+  }, []);
+
+  const stopTypewriter = useCallback(() => {
+    typewriterRef.current?.stop();
+    typewriterRef.current = null;
+    assistantIdRef.current = null;
+  }, []);
 
   const abortStream = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    stopTypewriter();
     setIsLoading(false);
     setIsStreaming(false);
-  }, []);
+  }, [stopTypewriter]);
 
   const runStream = useCallback(
     async (prompt: string) => {
@@ -77,6 +107,16 @@ export function useChatStream(initialMessages: ChatMessage[] = []): UseChatStrea
       setMessages((prev) => [...prev, userMessage, assistantPlaceholder]);
       setIsLoading(true);
       setIsStreaming(true);
+
+      stopTypewriter();
+      assistantIdRef.current = assistantId;
+
+      const typewriter = createTypewriterQueue({
+        charDelayMs: 80,
+        onUpdate: (content) => updateAssistantContent(assistantId, content),
+        onComplete: () => markAssistantComplete(assistantId),
+      });
+      typewriterRef.current = typewriter;
 
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -99,26 +139,9 @@ export function useChatStream(initialMessages: ChatMessage[] = []): UseChatStrea
               saveConversationId(meta.conversationId);
             },
             onDelta: (text) => {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? { ...m, content: m.content + text, status: "streaming" }
-                    : m,
-                ),
-              );
+              typewriter.enqueue(text);
             },
             onDone: (done) => {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? {
-                        ...m,
-                        content: done.message,
-                        status: "complete",
-                      }
-                    : m,
-                ),
-              );
               setLastTraceId(done.traceId);
               if (done.sessionId) {
                 setSessionId(done.sessionId);
@@ -128,8 +151,10 @@ export function useChatStream(initialMessages: ChatMessage[] = []): UseChatStrea
                 setConversationId(done.conversationId);
                 saveConversationId(done.conversationId);
               }
+              typewriter.complete(done.message);
             },
             onError: (err) => {
+              stopTypewriter();
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantId
@@ -144,14 +169,18 @@ export function useChatStream(initialMessages: ChatMessage[] = []): UseChatStrea
                 ),
               );
               setLastTraceId(err.traceId);
+              setIsStreaming(false);
             },
           },
         });
       } catch (err) {
         if (controller.signal.aborted) {
           setMessages((prev) => prev.filter((m) => m.id !== assistantId));
+          stopTypewriter();
           return;
         }
+
+        stopTypewriter();
 
         const message =
           err instanceof ChatStreamClientError
@@ -177,13 +206,19 @@ export function useChatStream(initialMessages: ChatMessage[] = []): UseChatStrea
               : m,
           ),
         );
+        setIsStreaming(false);
       } finally {
         setIsLoading(false);
-        setIsStreaming(false);
         abortRef.current = null;
       }
     },
-    [sessionId, conversationId],
+    [
+      sessionId,
+      conversationId,
+      stopTypewriter,
+      updateAssistantContent,
+      markAssistantComplete,
+    ],
   );
 
   const sendMessage = useCallback(

@@ -4,10 +4,11 @@ import { runReceptionAgentTurn } from './reception/reception-runner.js';
 import { createAgentRunContext } from './runtime/create-agent-run-context.js';
 import { formatFinalOutputMessage } from './runtime/format-final-output.js';
 import { getDefaultOpenAIAgentsRuntime } from './runtime/openai-agents-runtime.js';
-import { assertOpenAIKeyPresent } from './runtime/sdk-config.js';
+import { assertOpenAIKeyPresent, configureOpenAIAgentsSdk } from './runtime/sdk-config.js';
 import { structuredLog } from './runtime/structured-log.js';
 export async function runAgentWithOpenAISdk(request) {
     assertOpenAIKeyPresent();
+    configureOpenAIAgentsSdk();
     if (request.channel === 'reception') {
         return runReceptionAgentTurn(request);
     }

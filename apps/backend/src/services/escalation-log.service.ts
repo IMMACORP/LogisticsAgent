@@ -69,12 +69,12 @@ export class EscalationLogService {
         assignedTeam: input.assignedTeam ?? null,
         slackThreadTs: input.slackThreadTs ?? null,
         status: 'open',
-        metadata: {
+        metadata: ({
           idempotencyKey: input.payload.idempotencyKey,
           schemaVersion: input.payload.schemaVersion,
           triggers: input.payload.triggers,
           structuredPayload: input.payload,
-        },
+        } as any),
       },
     });
     return { id: row.id };

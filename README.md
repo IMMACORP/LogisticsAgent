@@ -73,14 +73,14 @@ When `INQUIRY_USE_AGENTS_SDK=true`, `POST /agent` runs the real OpenAI Agents SD
 
 Paginated list shape: `{ data: T[], pagination: { page, pageSize, total, totalPages } }`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/conversations` | Conversation history (`userId` required; optional `status`, `currentAgent`) |
-| GET | `/api/conversations/{conversationId}` | Single conversation |
-| GET | `/api/conversations/{conversationId}/messages` | Messages in a thread |
-| GET | `/api/messages` | Message history (`conversationId`, `userId`, `role` filters) |
-| GET | `/api/escalations` | Escalation history (`conversationId`, `status`, `priority`, `category`) |
-| GET | `/api/escalations/{escalationId}` | Single escalation log |
+| Method | Path                                           | Description                                                                 |
+| ------ | ---------------------------------------------- | --------------------------------------------------------------------------- |
+| GET    | `/api/conversations`                           | Conversation history (`userId` required; optional `status`, `currentAgent`) |
+| GET    | `/api/conversations/{conversationId}`          | Single conversation                                                         |
+| GET    | `/api/conversations/{conversationId}/messages` | Messages in a thread                                                        |
+| GET    | `/api/messages`                                | Message history (`conversationId`, `userId`, `role` filters)                |
+| GET    | `/api/escalations`                             | Escalation history (`conversationId`, `status`, `priority`, `category`)     |
+| GET    | `/api/escalations/{escalationId}`              | Single escalation log                                                       |
 
 OpenAPI document: `GET /openapi.json` (live) or `packages/openapi/openapi.yaml`. Regenerate spec: `npm run openapi:generate --workspace apps/backend`. Orval: `npm run generate --workspace @inquiry-agent/openapi`.
 

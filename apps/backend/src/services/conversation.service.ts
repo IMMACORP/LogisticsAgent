@@ -11,7 +11,6 @@ const CHANNEL_TO_AGENT: Record<AgentChannel, string> = {
   hr: 'hr',
   it: 'it',
   logistics: 'logistics',
-  accounting: 'accounting',
 };
 
 export interface EnsureConversationInput {

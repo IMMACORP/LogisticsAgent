@@ -1,6 +1,7 @@
 import { run } from '@openai/agents';
+import { configureOpenAIAgentsSdk } from './sdk-config.js';
 import { structuredLog } from './structured-log.js';
-import { formatFinalOutputMessage } from './format-final-output.js';
+import { channelUsesStructuredDialogueOutput, formatFinalOutputMessage, } from './format-final-output.js';
 function extractTextDelta(event) {
     if (!event || typeof event !== 'object') {
         return null;
@@ -23,12 +24,14 @@ function extractTextDelta(event) {
  */
 export async function streamAgentRun(input) {
     const { agent, context, emit } = input;
+    configureOpenAIAgentsSdk();
     structuredLog('info', 'agent.stream.start', {
         traceId: context.traceId,
         channel: context.channel,
         agent: agent.name,
         sessionId: context.sessionId,
     });
+    const suppressJsonDeltas = channelUsesStructuredDialogueOutput(context.channel);
     const started = Date.now();
     const streamResult = await run(agent, input.input, {
         context,
@@ -42,7 +45,7 @@ export async function streamAgentRun(input) {
             break;
         }
         const delta = extractTextDelta(event);
-        if (delta) {
+        if (delta && !suppressJsonDeltas) {
             await emit('delta', { text: delta });
             continue;
         }

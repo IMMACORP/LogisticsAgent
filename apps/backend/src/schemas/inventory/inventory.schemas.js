@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { agentNullable } from '../agent-zod.js';
 const warehouseCodeSchema = z
     .string()
     .trim()
@@ -13,24 +14,28 @@ const quantitySchema = z
     .number()
     .int('数量は整数で指定してください')
     .positive('数量は1以上で指定してください');
-export const searchInventoryInputSchema = z
+const searchInventoryObjectSchema = z
     .object({
-    itemCode: itemCodeSchema.optional(),
-    itemName: z.string().trim().min(1).max(512).optional(),
-    warehouseCode: warehouseCodeSchema.optional(),
-    limit: z.number().int().min(1).max(100).optional(),
+    itemCode: agentNullable(itemCodeSchema),
+    itemName: agentNullable(z.string().trim().min(1).max(512)),
+    warehouseCode: agentNullable(warehouseCodeSchema),
+    limit: agentNullable(z.number().int().min(1).max(100)),
 })
-    .refine((value) => value.itemCode || value.itemName || value.warehouseCode, {
+    .refine((value) => value.itemCode ?? value.itemName ?? value.warehouseCode, {
     message: 'itemCode、itemName、warehouseCode のいずれか1つ以上を指定してください',
 });
+export const searchInventoryToolParametersSchema = searchInventoryObjectSchema;
+export const searchInventoryInputSchema = searchInventoryToolParametersSchema;
 export const checkStockAvailabilityInputSchema = z.object({
     warehouseCode: warehouseCodeSchema,
     itemCode: itemCodeSchema,
     requestedQuantity: quantitySchema,
 });
-export const reserveInventoryInputSchema = z.object({
+const reserveInventoryObjectSchema = z.object({
     warehouseCode: warehouseCodeSchema,
     itemCode: itemCodeSchema,
     quantity: quantitySchema,
-    reservationReference: z.string().trim().min(1).max(128).optional(),
+    reservationReference: agentNullable(z.string().trim().min(1).max(128)),
 });
+export const reserveInventoryToolParametersSchema = reserveInventoryObjectSchema;
+export const reserveInventoryInputSchema = reserveInventoryToolParametersSchema;

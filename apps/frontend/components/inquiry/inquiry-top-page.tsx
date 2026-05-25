@@ -108,7 +108,7 @@ export function InquiryTopPage({ services }: InquiryTopPageProps) {
             key={chatResetKey}
             onReset={() => setChatResetKey((k) => k + 1)}
           >
-            <ChatPanel className="sticky top-[72px] h-[calc(100vh-72px)]" />
+            <ChatPanel className="sticky top-[72px] flex h-[calc(100dvh-72px)] max-h-[calc(100dvh-72px)] min-h-0" />
           </ChatErrorBoundary>
         ) : null}
       </div>

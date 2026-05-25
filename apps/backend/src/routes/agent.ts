@@ -6,7 +6,7 @@ const agentRouter = new Hono();
 
 const requestBody = z.object({
   userId: z.string().min(1),
-  channel: z.enum(['reception', 'hr', 'it', 'logistics', 'accounting']),
+  channel: z.enum(['reception', 'hr', 'it', 'logistics']),
   prompt: z.string().min(1),
   metadata: z.record(z.string(), z.unknown()).optional()
 });

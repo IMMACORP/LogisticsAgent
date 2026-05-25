@@ -1,4 +1,5 @@
 import { runTool } from '../../lib/tools/tool-result';
+import { stripNullFields } from '../../schemas/agent-zod.js';
 import { searchInventoryInputSchema } from '../../schemas/inventory/inventory.schemas';
 import { inventoryService } from '../../services';
 export async function searchInventory(input, _context) {
@@ -10,5 +11,5 @@ export async function searchInventory(input, _context) {
             errorCode: 'VALIDATION_ERROR',
         };
     }
-    return runTool(() => inventoryService.searchInventory(parsed.data));
+    return runTool(() => inventoryService.searchInventory(stripNullFields(parsed.data)));
 }

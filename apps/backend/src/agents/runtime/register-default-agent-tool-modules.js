@@ -7,12 +7,12 @@ import { slackAgentTools } from '../../tools/slack/index.js';
 export function registerDefaultAgentToolModules(registry) {
     registry.registerAgentToolModule({
         id: 'knowledge-base',
-        channels: ['reception', 'hr', 'it', 'accounting'],
+        channels: ['reception', 'hr', 'it'],
         tools: knowledgeAgentTools,
     });
     registry.registerAgentToolModule({
         id: 'slack-escalation',
-        channels: ['reception', 'hr', 'it', 'accounting'],
+        channels: ['reception', 'hr', 'it'],
         tools: slackAgentTools,
     });
     registry.registerAgentToolModule({

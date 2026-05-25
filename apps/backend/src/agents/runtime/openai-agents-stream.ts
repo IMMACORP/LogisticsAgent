@@ -4,7 +4,10 @@ import type { AgentRunContext } from '@inquiry-agent/shared-types';
 import type { AgentSession } from './agent-runtime.js';
 import { configureOpenAIAgentsSdk } from './sdk-config.js';
 import { structuredLog } from './structured-log.js';
-import { formatFinalOutputMessage } from './format-final-output.js';
+import {
+  channelUsesStructuredDialogueOutput,
+  formatFinalOutputMessage,
+} from './format-final-output.js';
 
 export type StreamEmit = (event: string, data: unknown) => void | Promise<void>;
 
@@ -56,6 +59,7 @@ export async function streamAgentRun(input: StreamAgentRunInput): Promise<Stream
     sessionId: context.sessionId,
   });
 
+  const suppressJsonDeltas = channelUsesStructuredDialogueOutput(context.channel);
   const started = Date.now();
   const streamResult = await run(agent as Agent<AgentRunContext>, input.input, {
     context,
@@ -71,7 +75,7 @@ export async function streamAgentRun(input: StreamAgentRunInput): Promise<Stream
     }
 
     const delta = extractTextDelta(event);
-    if (delta) {
+    if (delta && !suppressJsonDeltas) {
       await emit('delta', { text: delta });
       continue;
     }

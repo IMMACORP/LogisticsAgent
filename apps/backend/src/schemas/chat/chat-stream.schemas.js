@@ -1,5 +1,5 @@
 import { z } from 'zod';
-export const chatChannelSchema = z.enum(['reception', 'hr', 'it', 'logistics', 'accounting']);
+export const chatChannelSchema = z.enum(['reception', 'hr', 'it', 'logistics']);
 export const chatStreamRequestSchema = z.object({
     userId: z.string().min(1).max(255),
     channel: chatChannelSchema,

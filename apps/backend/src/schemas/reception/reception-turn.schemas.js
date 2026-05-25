@@ -23,7 +23,7 @@ export const receptionTurnOutputSchema = z.object({
     classification: z.object({
         domain: receptionDomainSchema,
         intentSummary: z.string().min(1).max(2000),
-        keywords: z.array(z.string().min(1).max(128)).max(24).optional(),
+        keywords: z.array(z.string().min(1).max(128)).max(24).nullable(),
     }),
     /** Model-estimated probability that the domain + next action are correct (0–1). */
     confidence: z.number().min(0).max(1),
@@ -39,5 +39,5 @@ export const receptionTurnOutputSchema = z.object({
     /** True when the model recommends human triage (policy edge, abuse, safety, etc.). */
     requestHumanReview: z.boolean(),
     /** Short reason for operators when escalating (Slack / logs). */
-    escalationReason: z.string().max(2000).optional(),
+    escalationReason: z.string().max(2000).nullable(),
 });

@@ -12,5 +12,9 @@ export {
   resolveAgentsModel,
 } from './sdk-config.js';
 export { structuredLog } from './structured-log.js';
-export { formatFinalOutputMessage } from './format-final-output.js';
+export {
+  channelUsesStructuredDialogueOutput,
+  extractUserFacingMessage,
+  formatFinalOutputMessage,
+} from './format-final-output.js';
 export { streamAgentRun, type StreamEmit } from './openai-agents-stream.js';

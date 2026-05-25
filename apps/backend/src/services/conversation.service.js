@@ -7,7 +7,6 @@ const CHANNEL_TO_AGENT = {
     hr: 'hr',
     it: 'it',
     logistics: 'logistics',
-    accounting: 'accounting',
 };
 export class ConversationService {
     conversationRepository;

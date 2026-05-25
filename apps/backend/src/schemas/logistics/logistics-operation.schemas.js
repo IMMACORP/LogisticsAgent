@@ -23,6 +23,6 @@ export const logisticsOperationOutputSchema = z.object({
     confidence: z.number().min(0).max(1),
     /** When true, human operators should be involved; model may also call notifySlack. */
     needsEscalation: z.boolean(),
-    escalationReason: z.string().max(2000).optional(),
+    escalationReason: z.string().max(2000).nullable(),
     suggestedNextSteps: z.array(z.string().min(1).max(500)).max(12),
 });

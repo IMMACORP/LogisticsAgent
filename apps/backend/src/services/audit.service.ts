@@ -26,9 +26,9 @@ export class AuditService {
         entityId: input.entityId,
         actorId: input.actorId ?? 'system',
         actorType: input.actorType ?? 'workflow',
-        oldValues: input.oldValues ?? undefined,
-        newValues: input.newValues ?? undefined,
-        metadata: input.metadata ?? undefined,
+        oldValues: (input.oldValues ?? undefined) as any,
+        newValues: (input.newValues ?? undefined) as any,
+        metadata: (input.metadata ?? undefined) as any,
       },
     });
     return { id: row.id };

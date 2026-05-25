@@ -5,7 +5,6 @@ export type AgentChannel =
   | 'hr'
   | 'it'
   | 'logistics'
-  | 'accounting'
   | 'reception';
 
 /**
